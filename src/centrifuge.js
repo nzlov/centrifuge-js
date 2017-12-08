@@ -1120,6 +1120,7 @@ centrifugeProto._presenceResponse = function (message) {
 centrifugeProto._historyResponse = function (message) {
     var uid = message.uid;
     var body = message.body;
+    var total = message.total;
     if (!(uid in this._callbacks)) {
         return;
     }
@@ -1130,7 +1131,31 @@ centrifugeProto._historyResponse = function (message) {
         if (!callback) {
             return;
         }
-        callback(body);
+        callback(body,total);
+    } else {
+        var errback = callbacks.errback;
+        if (!errback) {
+            return;
+        }
+        errback(this._errorObjectFromMessage(message));
+        this.trigger('error', [{
+            message: message
+        }]);
+    }
+};
+centrifugeProto._readResponse = function (message) {
+    var status = message.status;
+    if (!(uid in this._callbacks)) {
+        return;
+    }
+    var callbacks = this._callbacks[uid];
+    delete this._callbacks[uid];
+    if (!errorExists(message)) {
+        var callback = callbacks.callback;
+        if (!callback) {
+            return;
+        }
+        callback(status);
     } else {
         var errback = callbacks.errback;
         if (!errback) {
@@ -1239,6 +1264,9 @@ centrifugeProto._dispatchMessage = function (message) {
             break;
         case 'history':
             this._historyResponse(message);
+            break;
+        case 'read':
+            this._readResponse(message);
             break;
         case 'join':
             this._joinResponse(message);
@@ -1759,7 +1787,7 @@ subProto.presence = function () {
     });
 };
 
-subProto.history = function () {
+subProto.history = function (skip,limit) {
     var self = this;
     return new Promise(function (resolve, reject) {
         if (self._isUnsubscribed()) {
@@ -1774,6 +1802,34 @@ subProto.history = function () {
             var uid = self._centrifuge._addMessage({
                 method: 'history',
                 params: {
+                    skip: skip,
+                    limit: limit,
+                    channel: self.channel
+                }
+            });
+            self._centrifuge._registerCall(uid, resolve, reject);
+        }, function (err) {
+            reject(err);
+        });
+    });
+};
+
+subProto.readMessage = function (messageid) {
+    var self = this;
+    return new Promise(function (resolve, reject) {
+        if (self._isUnsubscribed()) {
+            reject(self._centrifuge._createErrorObject('subscription unsubscribed', 'fix'));
+            return;
+        }
+        self._promise.then(function () {
+            if (!self._centrifuge.isConnected()) {
+                reject(self._centrifuge._createErrorObject('disconnected', 'retry'));
+                return;
+            }
+            var uid = self._centrifuge._addMessage({
+                method: 'read',
+                params: {
+                    msgid: messageid,
                     channel: self.channel
                 }
             });

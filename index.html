@@ -1,0 +1,46 @@
+<html>
+    <head>
+        <title>Centrifugo js</title>
+        <script type="text/javascript" src="centrifuge.js"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/sockjs/1.0/sockjs.min.js"></script>
+    </head>
+    <body>
+    <script>
+        var centrifuge = new Centrifuge({
+            url: "http://localhost:8000/connection",
+            user: "42",
+            timestamp: "1488055494",
+            token: "24d0aa4d7c679e45e151d268044723d07211c6a9465d0e35ee35303d13c5eeff"
+        });
+        var subscription = {};
+        var public_callbacks = {
+            "message": function(dataset) {
+                console.log("MSG :"+dataset.uid);
+                console.log('DATASET: '+JSON.stringify(dataset));
+                subscription.readMessage(dataset.uid);
+            },
+            "subscribe": function(context) {
+                console.log('SUBSCRIBE: '+JSON.stringify(context));
+            },
+            "error": function(errContext) {
+                console.log('ERROR: '+JSON.stringify(errContext));
+            },
+            "unsubscribe": function(context) {
+                console.log('UNSUBSCRIBE: '+JSON.stringify(context));
+            }
+        }
+        
+        subscription = centrifuge.subscribe("public:chat", public_callbacks);
+        
+        centrifuge.on('connect', function(context) {
+            console.log("Connection ("+context.latency+"ms)");
+        });
+        
+        centrifuge.on('disconnect', function(context) {
+            console.log("Disconnection: "+context.reason);
+        });
+        
+        centrifuge.connect();
+    </script>
+    </body>
+    </html>

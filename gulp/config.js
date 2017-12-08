@@ -2,7 +2,7 @@
 var paths = {
   mainJS: ['./src/centrifuge.js'],
   js: ['./src/*.js*'],
-  bundleFolder: './build/',
+  bundleFolder: './',
   bundleJS: 'centrifuge.js',
   releaseJS: 'centrifuge.js',
   releaseMinJS: 'centrifuge.min.js'
