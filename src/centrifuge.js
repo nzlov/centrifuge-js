@@ -1144,6 +1144,7 @@ centrifugeProto._historyResponse = function (message) {
     }
 };
 centrifugeProto._readResponse = function (message) {
+    var uid = message.uid;
     var status = message.status;
     if (!(uid in this._callbacks)) {
         return;
