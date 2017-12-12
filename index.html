@@ -2,21 +2,29 @@
     <head>
         <title>Centrifugo js</title>
         <script type="text/javascript" src="centrifuge.js"></script>
+        <script src="https://cdn.bootcss.com/crypto-js/3.1.9/core.js"></script>
+        <script src="https://cdn.bootcss.com/crypto-js/3.1.9/hmac.js"></script>
+        <script src="https://cdn.bootcss.com/crypto-js/3.1.9/sha256.js"></script>
+        <script src="https://cdn.bootcss.com/crypto-js/3.1.9/enc-hex.js"></script>
+        <script src="https://cdn.bootcss.com/crypto-js/3.1.9/hmac-sha256.js"></script>
     </head>
     <body>
     <script>
         var centrifuge = new Centrifuge({
-            url: "ws://localhost:8000/connection/websocket",
+            url: "ws://192.168.1.9:8000/connection/websocket",
             user: "42",
             timestamp: "1488055494",
-            token: "24d0aa4d7c679e45e151d268044723d07211c6a9465d0e35ee35303d13c5eeff"
+            token: CryptoJS.enc.Hex.stringify(CryptoJS.HmacSHA256("42"+"1488055494","109AF84FWF45AS4S5W8F"))
         });
         var subscription = {};
         var public_callbacks = {
             "message": function(dataset) {
-                console.log("MSG :"+dataset.uid);
-                console.log('DATASET: '+JSON.stringify(dataset));
+                console.dir(dataset);
                 subscription.readMessage(dataset.uid);
+            },
+            "read": function(dataset) {
+                console.log("read");
+                console.dir(dataset);
             },
             "subscribe": function(context) {
                 console.log('SUBSCRIBE: '+JSON.stringify(context));

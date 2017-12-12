@@ -1146,29 +1146,14 @@ centrifugeProto._historyResponse = function (message) {
     }
 };
 centrifugeProto._readResponse = function (message) {
-    var uid = message.uid;
-    var status = message.status;
-    if (!(uid in this._callbacks)) {
+    var body = message.body;
+    var channel = message.body.channel;
+
+    var sub = this._getSub(channel);
+    if (!sub) {
         return;
     }
-    var callbacks = this._callbacks[uid];
-    delete this._callbacks[uid];
-    if (!errorExists(message)) {
-        var callback = callbacks.callback;
-        if (!callback) {
-            return;
-        }
-        callback(status);
-    } else {
-        var errback = callbacks.errback;
-        if (!errback) {
-            return;
-        }
-        errback(this._errorObjectFromMessage(message));
-        this.trigger('error', [{
-            message: message
-        }]);
-    }
+    sub.trigger('read', [body.msgid]);
 };
 
 centrifugeProto._joinResponse = function (message) {
@@ -1611,7 +1596,7 @@ subProto._setEvents = function (events) {
     if (isFunction(events)) {
         this.on('message', events);
     } else if (Object.prototype.toString.call(events) === Object.prototype.toString.call({})) {
-        var knownEvents = ['message', 'join', 'leave', 'unsubscribe', 'subscribe', 'error'];
+        var knownEvents = ['message', 'join', 'read','leave', 'unsubscribe', 'subscribe', 'error'];
         for (var i = 0, l = knownEvents.length; i < l; i++) {
             var ev = knownEvents[i];
             if (ev in events) {
@@ -1829,14 +1814,13 @@ subProto.readMessage = function (messageid) {
                 reject(self._centrifuge._createErrorObject('disconnected', 'retry'));
                 return;
             }
-            var uid = self._centrifuge._addMessage({
+            self._centrifuge._addMessage({
                 method: 'read',
                 params: {
                     msgid: messageid,
                     channel: self.channel
                 }
             });
-            self._centrifuge._registerCall(uid, resolve, reject);
         }, function (err) {
             reject(err);
         });
