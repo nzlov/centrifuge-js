@@ -20,12 +20,14 @@
         var public_callbacks = {
             "message": function(dataset) {
                 console.dir(dataset);
-                subscription.readMessage(dataset.uid);
+              subscription.readMessage(dataset.uid).then(function(msgid){
+                  console.log("Read success");
+              });
             },
             "read": function(dataset) {
                 console.log("read");
                 console.dir(dataset);
-            },
+            },                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
             "subscribe": function(context) {
                 console.log('SUBSCRIBE: '+JSON.stringify(context));
             },
@@ -41,6 +43,7 @@
         
         centrifuge.on('connect', function(context) {
             console.log("Connection ("+context.latency+"ms)");
+            subscription.publish("a");
         });
         
         centrifuge.on('disconnect', function(context) {

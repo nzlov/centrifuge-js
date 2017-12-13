@@ -1144,6 +1144,7 @@ centrifugeProto._historyResponse = function (message) {
     }
 };
 centrifugeProto._readResponse = function (message) {
+    var uid = message.uid;
     var body = message.body;
     var channel = message.body.channel;
 
@@ -1151,7 +1152,30 @@ centrifugeProto._readResponse = function (message) {
     if (!sub) {
         return;
     }
-    sub.trigger('read', [body.msgid]);
+
+    if (!(uid in this._callbacks)) {
+        sub.trigger('read', [body.msgid]);
+        return;
+    }
+    var callbacks = this._callbacks[uid];
+    delete this._callbacks[uid];
+    if (!errorExists(message)) {
+        var callback = callbacks.callback;
+        if (!callback) {
+            return;
+        }
+        callback(body.msgid);
+    } else {
+        var errback = callbacks.errback;
+        if (!errback) {
+            return;
+        }
+        errback(this._errorObjectFromMessage(message));
+        this.trigger('error', [{
+            message: message
+        }]);
+    }
+
 };
 
 centrifugeProto._joinResponse = function (message) {
@@ -1812,13 +1836,14 @@ subProto.readMessage = function (messageid) {
                 reject(self._centrifuge._createErrorObject('disconnected', 'retry'));
                 return;
             }
-            self._centrifuge._addMessage({
+            var uid = self._centrifuge._addMessage({
                 method: 'read',
                 params: {
                     msgid: messageid,
                     channel: self.channel
                 }
             });
+            self._centrifuge._registerCall(uid, resolve, reject);
         }, function (err) {
             reject(err);
         });
