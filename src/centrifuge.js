@@ -1014,7 +1014,7 @@ centrifugeProto._subscribeResponse = function (message) {
         var messages = body.messages;
         if (messages && messages.length > 0) {
             // handle missed messages
-            messages = messages.reverse();
+            // messages = messages.reverse();
             for (var i in messages) {
                 if (messages.hasOwnProperty(i)) {
                     this._messageResponse({
@@ -1555,6 +1555,35 @@ centrifugeProto.subscribe = function (channel, events) {
     if (!this._config.resubscribe && !this.isConnected()) {
         throw 'Can not only subscribe in connected state when resubscribe option is off';
     }
+
+    var currentSub = this._getSub(channel);
+
+    if (currentSub !== null) {
+        currentSub._setEvents(events);
+        if (currentSub._isUnsubscribed()) {
+            currentSub.subscribe();
+        }
+        return currentSub;
+    } else {
+        var sub = new Sub(this, channel, events);
+        this._subs[channel] = sub;
+        sub.subscribe();
+        return sub;
+    }
+};
+
+centrifugeProto.subscribeWithMsgid = function (channel, events, msgid) {
+    if (arguments.length < 1) {
+        throw 'Illegal arguments number: required 1, got ' + arguments.length;
+    }
+    if (!isString(channel)) {
+        throw 'Illegal argument type: channel must be a string';
+    }
+    if (!this._config.resubscribe && !this.isConnected()) {
+        throw 'Can not only subscribe in connected state when resubscribe option is off';
+    }
+
+    this._lastMessageID[channel] = msgid
 
     var currentSub = this._getSub(channel);
 
