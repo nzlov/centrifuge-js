@@ -1154,7 +1154,10 @@ centrifugeProto._readResponse = function (message) {
     }
 
     if (!(uid in this._callbacks)) {
-        sub.trigger('read', [body.msgid]);
+        sub.trigger('read', [{
+           sub:sub,
+           body: body.msgid
+        }]);
         return;
     }
     var callbacks = this._callbacks[uid];
@@ -1186,7 +1189,10 @@ centrifugeProto._joinResponse = function (message) {
     if (!sub) {
         return;
     }
-    sub.trigger('join', [body]);
+    sub.trigger('join', [{
+        sub:sub,
+        body: body
+     }]);
 };
 
 centrifugeProto._leaveResponse = function (message) {
@@ -1197,7 +1203,10 @@ centrifugeProto._leaveResponse = function (message) {
     if (!sub) {
         return;
     }
-    sub.trigger('leave', [body]);
+    sub.trigger('leave', [{
+        sub:sub,
+        body: body
+     }]);
 };
 
 centrifugeProto._messageResponse = function (message) {
@@ -1211,7 +1220,10 @@ centrifugeProto._messageResponse = function (message) {
     if (!sub) {
         return;
     }
-    sub.trigger('message', [body]);
+    sub.trigger('message', [{
+        sub:sub,
+        body: body
+     }]);
 };
 
 centrifugeProto._refreshResponse = function (message) {

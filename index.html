@@ -16,11 +16,10 @@
             timestamp: "1488055494",
             token: CryptoJS.enc.Hex.stringify(CryptoJS.HmacSHA256("42"+"1488055494","109AF84FWF45AS4S5W8F"))
         });
-        var subscription = {};
         var public_callbacks = {
             "message": function(dataset) {
                 console.dir(dataset);
-              subscription.readMessage(dataset.uid).then(function(msgid){
+                dataset.sub.readMessage(dataset.body.uid).then(function(msgid){
                   console.log("Read success");
               });
             },
@@ -39,7 +38,7 @@
             }
         }
         
-        subscription = centrifuge.subscribe("public:chat", public_callbacks);
+        var subscription = centrifuge.subscribe("public:chat", public_callbacks);
         
         centrifuge.on('connect', function(context) {
             console.log("Connection ("+context.latency+"ms)");
