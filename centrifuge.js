@@ -1158,7 +1158,7 @@ centrifugeProto._readResponse = function (message) {
     if (!(uid in this._callbacks)) {
         sub.trigger('read', [{
            sub:sub,
-           msgid: body.msgid
+           body: body.msgid
         }]);
         return;
     }

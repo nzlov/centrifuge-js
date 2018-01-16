@@ -11,7 +11,7 @@
     <body>
     <script>
         var centrifuge = new Centrifuge({
-            url: "ws://192.168.1.9:8000/connection/websocket",
+            url: "ws://192.168.1.200:8000/connection/websocket",
             user: "42",
             timestamp: "1488055494",
             token: CryptoJS.enc.Hex.stringify(CryptoJS.HmacSHA256("42"+"1488055494","109AF84FWF45AS4S5W8F"))
@@ -42,14 +42,23 @@
         
         centrifuge.on('connect', function(context) {
             console.log("Connection ("+context.latency+"ms)");
-            subscription.publish("a");
+          console.log("p:",  subscription.publish("a"));
         });
         
         centrifuge.on('disconnect', function(context) {
             console.log("Disconnection: "+context.reason);
         });
         
+        function sleep(d){
+            for(var t = Date.now();Date.now() - t <= d;);
+        }
+ 
         centrifuge.connect();
+        setTimeout (function(){
+            sleep(5000);
+            subscription.unsubscribe();
+            subscription = centrifuge.subscribe("public:chat", public_callbacks); 
+        },0)
     </script>
     </body>
     </html>
