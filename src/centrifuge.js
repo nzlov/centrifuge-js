@@ -408,6 +408,15 @@ centrifugeProto._configure = function (configuration) {
         }
     }
 
+    if (!this._config.appkey && this._config.appkey !== '') {
+        if (!this._config.insecure) {
+            throw 'Missing required configuration parameter \'appkey\' specifying appkey\'s unique ID in your application';
+        } else {
+            this._debug('appkey not found but this is OK for insecure mode - anonymous access will be used');
+            this._config.appkey = '';
+        }
+    }
+
     if (!this._config.timestamp) {
         if (!this._config.insecure) {
             throw 'Missing required configuration parameter \'timestamp\'';
@@ -590,6 +599,7 @@ centrifugeProto._setupTransport = function () {
             method: 'connect',
             params: {
                 user: self._config.user,
+                appkey: self._config.appkey,
                 info: self._config.info
             }
         };

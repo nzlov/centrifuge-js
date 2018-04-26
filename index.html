@@ -13,8 +13,9 @@
         var centrifuge = new Centrifuge({
             url: "ws://192.168.1.200:8000/connection/websocket",
             user: "42",
+            appkey: "web_merchant",
             timestamp: "1488055494",
-            token: CryptoJS.enc.Hex.stringify(CryptoJS.HmacSHA256("42"+"1488055494","109AF84FWF45AS4S5W8F"))
+            token: CryptoJS.enc.Hex.stringify(CryptoJS.HmacSHA256("42"+"c31df7e10a"+"1488055494","109AF84FWF45AS4S5W8F"))
         });
         var public_callbacks = {
             "message": function(dataset) {

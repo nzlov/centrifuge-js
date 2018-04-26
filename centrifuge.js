@@ -249,10 +249,10 @@ Centrifuge._nextJSONPCallbackID = 1;
 var centrifugeProto = Centrifuge.prototype;
 
 centrifugeProto._jsonp = function (url, params, headers, data, callback) {
-    if (headers.length > 0) {
+    if (Object.keys(headers).length > 0) {
         this._log('Only AJAX request allows to send custom headers, it is not possible with JSONP.');
     }
-    self._debug('sending JSONP request to', url);
+    this._debug('sending JSONP request to', url);
 
     var callbackName = 'centrifuge_jsonp_' + Centrifuge._nextJSONPCallbackID.toString();
     Centrifuge._nextJSONPCallbackID++;
@@ -269,7 +269,7 @@ centrifugeProto._jsonp = function (url, params, headers, data, callback) {
     Centrifuge._jsonpCallbacks[callbackName] = function (data) {
         clearTimeout(timeoutTrigger);
         callback(false, data);
-        delete Centrifuge[callbackName];
+        delete Centrifuge._jsonpCallbacks[callbackName];
     };
 
     var query = '';
@@ -407,6 +407,15 @@ centrifugeProto._configure = function (configuration) {
         } else {
             this._debug('user not found but this is OK for insecure mode - anonymous access will be used');
             this._config.user = '';
+        }
+    }
+
+    if (!this._config.appkey && this._config.appkey !== '') {
+        if (!this._config.insecure) {
+            throw 'Missing required configuration parameter \'appkey\' specifying appkey\'s unique ID in your application';
+        } else {
+            this._debug('appkey not found but this is OK for insecure mode - anonymous access will be used');
+            this._config.appkey = '';
         }
     }
 
@@ -592,6 +601,7 @@ centrifugeProto._setupTransport = function () {
             method: 'connect',
             params: {
                 user: self._config.user,
+                appkey: self._config.appkey,
                 info: self._config.info
             }
         };
@@ -706,7 +716,7 @@ centrifugeProto._disconnect = function (reason, shouldReconnect) {
         this._reconnect = false;
     }
 
-    this._clearConnectedState(shouldReconnect);
+    this._clearConnectedState(reconnect);
 
     if (!this.isDisconnected()) {
         this._setStatus('disconnected');
@@ -727,7 +737,7 @@ centrifugeProto._disconnect = function (reason, shouldReconnect) {
 };
 
 centrifugeProto._refreshFailed = function () {
-    self._numRefreshFailed = 0;
+    this._numRefreshFailed = 0;
     if (!this.isDisconnected()) {
         this._disconnect('refresh failed', false);
     }
@@ -795,7 +805,7 @@ centrifugeProto._refresh = function () {
     };
 
     if (this._config.onRefresh !== null) {
-        context = {};
+        var context = {};
         this._config.onRefresh(context, cb);
     } else {
         var transport = this._config.refreshTransport.toLowerCase();
