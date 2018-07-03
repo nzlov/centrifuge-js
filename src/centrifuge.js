@@ -732,6 +732,22 @@ centrifugeProto._connect = function(callback) {
   this._setupTransport();
 };
 
+centrifugeProto._micro = function(name, data) {
+  var self = this;
+  return new Promise(function(resolve, reject) {
+    var uid = self._addMessage({
+      method: "micro",
+      params: {
+        name: name,
+        data: data
+      }
+    });
+    self._registerCall(uid, resolve, reject);
+  });
+};
+
+centrifugeProto.micro = centrifugeProto._micro;
+
 centrifugeProto._disconnect = function(reason, shouldReconnect) {
   if (this.isDisconnected()) {
     return;
@@ -1162,6 +1178,34 @@ centrifugeProto._publishResponse = function(message) {
   }
 };
 
+centrifugeProto._microResponse = function(message) {
+  var uid = message.uid;
+  var body = message.body;
+  if (!(uid in this._callbacks)) {
+    return;
+  }
+  var callbacks = this._callbacks[uid];
+  delete this._callbacks[uid];
+  if (!errorExists(message)) {
+    var callback = callbacks.callback;
+    if (!callback) {
+      return;
+    }
+    callback(body);
+  } else {
+    var errback = callbacks.errback;
+    if (!errback) {
+      return;
+    }
+    errback(this._errorObjectFromMessage(message));
+    this.trigger("error", [
+      {
+        message: message
+      }
+    ]);
+  }
+};
+
 centrifugeProto._presenceResponse = function(message) {
   var uid = message.uid;
   var body = message.body;
@@ -1366,6 +1410,9 @@ centrifugeProto._dispatchMessage = function(message) {
       break;
     case "publish":
       this._publishResponse(message);
+      break;
+    case "micro":
+      this._microResponse(message);
       break;
     case "presence":
       this._presenceResponse(message);

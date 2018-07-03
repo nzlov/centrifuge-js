@@ -39,27 +39,35 @@
             }
         }
         
-        var subscription = centrifuge.subscribe("public:chat", public_callbacks);
+        // var subscription = centrifuge.subscribe("public:chat", public_callbacks);
         
         centrifuge.on('connect', function(context) {
             console.log("Connection ("+context.latency+"ms)");
-          console.log("p:",  subscription.publish("a"));
+        //   console.log("p:",  subscription.publish("a"));
         });
         
         centrifuge.on('disconnect', function(context) {
             console.log("Disconnection: "+context.reason);
         });
         
-        function sleep(d){
-            for(var t = Date.now();Date.now() - t <= d;);
-        }
+        // function sleep(d){
+        //     for(var t = Date.now();Date.now() - t <= d;);
+        // }
  
         centrifuge.connect();
+
+
         setTimeout (function(){
-            sleep(5000);
-            subscription.unsubscribe();
-            subscription = centrifuge.subscribe("public:chat", public_callbacks); 
-        },0)
+            centrifuge.micro("Activity.GenActivity","{\"a\":1}").then(function(a) {
+                    // success ack from Centrifugo received
+                console.dir(a);
+            }, function(err) {
+                // publish call failed with error
+                console.dir(err);
+            });   
+            // subscription.unsubscribe();
+            // subscription = centrifuge.subscribe("public:chat", public_callbacks); 
+        },10)
     </script>
     </body>
     </html>
